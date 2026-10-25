@@ -4,10 +4,13 @@ function h(?string $str): string {
     return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-// input.php から渡ってきたデータを取得（空なら空文字）
-$name  = $_POST['name'] ?? '';
-$email = $_POST['email'] ?? '';
-$age   = $_POST['age'] ?? '';
+require_once __DIR__.'/input-validation.php';
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    header('Allow: POST'); http_response_code(405); exit('Method not allowed.');
+}
+try { $input = validatedFormInput($_POST); }
+catch (InvalidArgumentException) { http_response_code(400); exit('Invalid form input.'); }
+$name = $input['name']; $email = $input['email']; $age = $input['age'];
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -40,7 +43,7 @@ $age   = $_POST['age'] ?? '';
         <input type="hidden" name="name" value="<?= h($name) ?>">
         <input type="hidden" name="email" value="<?= h($email) ?>">
         <input type="hidden" name="age" value="<?= h($age) ?>">
-        
+
         <button type="button" onclick="history.back();">戻る</button>
         <button type="submit">登録する</button>
     </form>
